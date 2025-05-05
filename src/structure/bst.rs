@@ -115,23 +115,21 @@ impl BstNode {
         if let Some(right_node) = &x_node.borrow().right {
             return Some(right_node.borrow().minimum());
         }
-
-        let mut x_node = x_node;
-        let mut y_node = BstNode::upgrade_weak_to_strong(x_node.borrow().parent.clone());
-        let mut temp: BstNodeLink;
-
-        while let Some(ref exist) = y_node {
+        
+        let mut x_node = x_node.clone();  
+        let mut y_node_opt = BstNode::upgrade_weak_to_strong(x_node.borrow().parent.clone());
+    
+        while let Some(exist) = y_node_opt {
             if let Some(ref left_child) = exist.borrow().left {
-                if BstNode::is_node_match(left_child, x_node) {
+                if BstNode::is_node_match(left_child, &x_node) {
                     return Some(exist.clone());
                 }
             }
-
-            temp = y_node.unwrap();
-            x_node = &temp;
-            y_node = BstNode::upgrade_weak_to_strong(temp.borrow().parent.clone());
+    
+            x_node = exist.clone();
+            y_node_opt = BstNode::upgrade_weak_to_strong(exist.borrow().parent.clone());
         }
-
+    
         None
     }
 
@@ -285,10 +283,10 @@ impl BstNode {
     /**
      * Upgrade a weak reference to a strong reference
      */
-    fn upgrade_weak_to_strong(node: Option<WeakBstNodeLink>) -> Option<BstNodeLink> {
+     fn upgrade_weak_to_strong(node: Option<WeakBstNodeLink>) -> Option<BstNodeLink> {
         match node {
             None => None,
-            Some(x) => Some(x.upgrade().unwrap()),
+            Some(x) => x.upgrade(),  
         }
     }
 }
